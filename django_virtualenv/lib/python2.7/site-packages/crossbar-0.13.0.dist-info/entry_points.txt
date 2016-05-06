@@ -1,0 +1,3 @@
+[console_scripts]
+crossbar = crossbar.controller.cli:run
+

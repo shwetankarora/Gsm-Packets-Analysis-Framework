@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+ <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+ <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+ <script src="http://autobahn.s3.amazonaws.com/autobahnjs/latest/autobahn.min.jgz"></script>
+ <style>
+#mapid { height: 780px; }
+ </style>
+</head>
+<body>
+<style>
+.my-icon {
+  border-radius: 100%;
+  width: 3px;
+  height: 3px;
+  text-align: center;
+  line-height: 20px;
+  color: white;
+}
+.icon-dc {
+  background: #D65757;
+}
+</style>
+<div id="mapid"></div>
+
+
+<script>
+
+
+var wsuri;
+if (document.location.origin == "file://") {
+   wsuri = "ws://127.0.0.1:8080/ws";
+} else {
+   wsuri = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
+               document.location.host + "/ws";
+}
+
+// the WAMP connection to the Router
+//
+var connection = new autobahn.Connection({
+   url: wsuri,
+   realm: "realm1"
+});
+
+L.mapbox.accessToken = 'pk.eyJ1IjoiYW5pcnVkZGgiLCJhIjoiY2lub2h2enB4MHp4OHVpa2p0dzRmemNvZiJ9.iaGiHezngZhiyWDznxwc-Q';
+var mapboxTiles = L.tileLayer('https://api.mapbox.com/v4/aniruddh.010ee35f/{z}/{x}/{y}.png?access_token=' + L.mapbox.accessToken, {
+    attribution: ''
+});
+
+var map = L.map('mapid')
+    .addLayer(mapboxTiles)
+    .setView([28.6885, 77.0203], 11);
+
+var cssIcon = L.divIcon({
+  className: 'my-icon icon-dc',
+  iconSize: null
+});
+// fired when connection is established and session attached
+//
+connection.onopen = function (session, details) {
+
+   console.log("Connected");
+
+   // SUBSCRIBE to a topic and receive events
+   //
+   function on_counter (args) {
+      var counter = args[0];
+      counter = counter.split(',');
+      lat = parseFloat(counter[10].split(": ")[1]);
+      lon = parseFloat(counter[2].split(": ")[1]);
+	L.marker([lat,lon], {icon: cssIcon}).addTo(map);
+   }
+   session.subscribe('com.example.geochart.yo', on_counter).then(
+      function (sub) {
+         console.log('subscribed to topic');
+      },
+      function (err) {
+         console.log('failed to subscribe to topic', err);
+      }
+   );
+
+   
+};
+
+// fired when connection was lost (or could not be established)
+//
+connection.onclose = function (reason, details) {
+   console.log("Connection lost: " + reason);
+}
+
+// now actually open the connection
+//
+connection.open();
+
+/*
+
+*/
+
+</script>
+
+
+</body>
+</html>

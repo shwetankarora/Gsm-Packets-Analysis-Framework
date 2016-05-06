@@ -1,0 +1,23 @@
+{
+  "name": "packets_visualization",
+  "version": "1.0.0",
+  "description": "Visualizes Simulated gsm packets",
+  "main": "app.js",
+  "scripts": {
+    "test": "gnuplot && plot sin(x)"
+  },
+  "keywords": [
+    "visualization",
+    "gsm",
+    "simulation",
+    "simulator",
+    "visualizer",
+    "packets"
+  ],
+  "author": "Shwetank Arora",
+  "license": "MIT",
+  "dependencies": {
+    "node-argument-parser": "^0.1.0",
+    "websocket": "^1.0.22"
+  }
+}

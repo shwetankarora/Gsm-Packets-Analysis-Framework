@@ -1,0 +1,9 @@
+{
+	"arguments" : [
+		{ "full" : "file", "short" : "f", "value" : true },
+		{ "full" : "overwrite", "short" : "o" },
+	],
+	"defaults" : {
+		"help" : true
+	}
+}

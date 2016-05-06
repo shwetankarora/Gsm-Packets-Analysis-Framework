@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+
+<head>
+ <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+ <script src="http://autobahn.s3.amazonaws.com/autobahnjs/latest/autobahn.min.jgz"></script>
+</head>
+
+
+<body>
+<div id="container"></div>
+
+<script>
+google.charts.load("current", {packages:['corechart']});
+google.charts.setOnLoadCallback(oneTimeConnection);
+
+var sess, conn;
+
+var AllSubs = [];
+
+// global contains options for every function
+var globalSpace = {
+	'barChart': {
+			'options': {'title': 'hello'}
+		},
+	'pieChart': {
+			'options': {}
+		},
+	'columnChart': {
+			'options': {}
+		},
+	'lineChart': {
+			'options': {}
+		},
+	'scatterChart': {
+			'options': {}
+		},
+	'comboChart': {
+			'options': {}
+		},
+};
+
+function getFunc(name){
+	if(name == 'barChart'){
+		return barChart;
+	}
+	if(name == 'pieChart'){
+		return pieChart;
+	}
+	if(name == 'scatterChart'){
+		return scatterChart;
+	}
+	if(name == 'columnChart'){
+		return columnChart;
+	}
+	if(name == 'lineChart'){
+		return lineChart;
+	}
+	if(name == 'comboChart'){
+		return comboChart;
+	}
+}
+
+//contains options for every chart drawn
+var chartSpace = {};
+
+function handleMetaData(args){
+	// this function will subscribe/unsubscribe to necessary topics
+	// args should be a json string
+	// args contains 3 keys - subscribe, unsubscribe, title
+	// subscribe = an array of 'com.example.[function name].[md5 id]'
+	// unsubscribe = '__all__' or ''
+	// title is a string. Must be given if subscribe topics are passes
+	//console.log(args);
+	args = args[0]
+	while(args.indexOf('\'') != -1){
+		args = args.replace('\'','\"');
+	}
+	a = args;
+	var data = JSON.parse(args)
+	var subs = data['subscribe'];
+	var unsubs = data['unsubscribe'];
+	var title = data['title'];
+	if( unsubs == '__all__'){
+		for(var i = 0 ; i < AllSubs.length ; i++){
+		sess.unsubscribe(AllSubs[i])
+		}
+		AllSubs = [];
+		chartSpace = {};
+		// delete all child elements
+		var container = document.getElementById('container');
+		while(container.firstChild){
+		container.removeChild(container.firstChild);
+		}
+	}
+	if(subs != ''){
+		var funcName = subs.split('.')[2];
+		//console.log('Enter', subs, funcName);
+		sess.subscribe(subs, getFunc(funcName)).then(
+		function(sub){ 
+		console.log("Subscribed to: ",sub['topic']); 
+		// add some chart space for options
+		//console.log('move')
+		var __id__ = subs.split('.')[3];
+		chartSpace[__id__] = { 'options': globalSpace[funcName]['options'] };
+		chartSpace[__id__]['options']['title'] = title;
+		// make an element in html file
+		var child = document.createElement('div');
+		var parent = document.getElementById('container');
+		child.id = funcName+'-'+__id__;
+		if(!document.getElementById(child.id)){ parent.appendChild(child); AllSubs.push(subs); }
+		// store in AllSubs
+		//console.log(chartSpace);
+		//console.log(globalSpace);
+		//console.log(AllSubs);
+		},
+		function(err){ console.log("Error Occurred: ",err); conn.close(); }
+		);
+	}
+}
+
+var d;
+var barChart = function(received){
+// all data must contain an '__id__' field i.e., data = {'__id__': 'any string', '__data__': data, '__add__': 'true or false'}
+// if __add__ is false then update data
+
+/* this code is only for testing */
+      received = JSON.parse(received[0]);
+      var data = google.visualization.arrayToDataTable([
+        ["Element", "Density", { role: "style" } ],
+        ["Copper", 8.94, "#b87333"],
+        ["Silver", 10.49, "silver"],
+        ["Gold", 19.30, "gold"],
+        ["Platinum", 21.45, "color: #e5e4e2"]
+      ]);
+
+      var view = new google.visualization.DataView(data);
+      view.setColumns([0, 1,
+                       { calc: "stringify",
+                         sourceColumn: 1,
+                         type: "string",
+                         role: "annotation" },
+                       2]);
+
+      var options = {
+        title: "Density of Precious Metals, in g/cm^3",
+        width: 600,
+        height: 400,
+        bar: {groupWidth: "95%"},
+        legend: { position: "none" },
+      };
+      var chart = new google.visualization.ColumnChart(document.getElementById("barChart-"+received['__id__']));
+      chart.draw(view, options);
+
+}
+
+var pieChart = function(data){
+}
+
+var columnChart = function(data){
+}
+
+var scatterChart = function(data){
+}
+
+var lineChart = function(data){
+}
+
+var comboChart = function(data){
+}
+
+
+function oneTimeConnection(){
+//making a connection to wamp router
+var wsuri;
+if (document.location.origin == "file://") {
+   wsuri = "ws://127.0.0.1:8080/ws";
+} else {
+   wsuri = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
+               document.location.host + "/ws";
+}
+
+var connection = new autobahn.Connection({
+   url: wsuri,
+   realm: "realm1"
+});
+
+conn = connection;
+//done making a connection
+
+//handling connection
+connection.onopen = function(session, details){
+	console.log('Connected');
+	sess = session;
+	session.subscribe('com.example.metadata', handleMetaData).then(
+	function(sub){ console.log("Subscribed to metadata"); },
+	function(err){ console.log("Unable to subscribe to metadata due to ", err); conn.close(); }
+	)
+}
+
+connection.onclose = function (reason, details) {
+   console.log("Connection lost: " + reason);
+}
+
+connection.open()
+}
+//done handling connection
+
+</script>
+
+
+</body>
+</html>

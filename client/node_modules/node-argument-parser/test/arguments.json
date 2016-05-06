@@ -1,0 +1,10 @@
+{
+	"arguments" : [
+		{ "full" : "file", "short" : "f", "value" : true, "description" : "File for parse" },
+		{ "full" : "overwrite", "short" : "o", "description" : "Should overwrite changes?" }
+	],
+	"defaults" : {
+		"help" : true,
+		"helpExtras" : "Documentation can be fount at: foo.eu"
+	}
+}

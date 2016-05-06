@@ -1,0 +1,11 @@
+{
+	"hello" : "world", // important!
+
+	/* This section does nothing at all, like NOP */
+	"what" : "?",
+
+	/*
+	 * See this array :)
+	 */
+	"hey" : ["yo", "jo"]
+} // cool?
