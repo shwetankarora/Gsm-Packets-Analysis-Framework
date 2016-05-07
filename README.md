@@ -38,3 +38,9 @@ If you see the bar chart, then the code is working
 
 I will be adding support for other visualization elements like piechart, geochart, etc.
 Till then, stay tuned!!!
+
+##Screenshots
+![Cell Towers in Delhi](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/screenshot.png "Cell Towers in Delhi")
+![Day1 stats](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/screenshot.png "Call Details of Day1")
+![Person1 stats](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/screenshot.png "Call Details of Person1")
+
