@@ -40,7 +40,7 @@ I will be adding support for other visualization elements like piechart, geochar
 Till then, stay tuned!!!
 
 ##Screenshots
-![Cell Towers in Delhi](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/screenshot.png "Cell Towers in Delhi")
-![Day1 stats](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/screenshot.png "Call Details of Day1")
-![Person1 stats](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/screenshot.png "Call Details of Person1")
+![Cell Towers in Delhi](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/Cell_Towers_Delhi.png "Cell Towers in Delhi")
+![Day1 stats](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/Day1.png "Call Details of Day1")
+![Person1 stats](https://github.com/shwetankarora/Gsm-Packets-Analysis-Framework/blob/master/mainFramework/screenshots/Person1.png "Call Details of Person1")
 
