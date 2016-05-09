@@ -2,8 +2,13 @@
 <html>
 
 <head>
+
  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
  <script src="http://autobahn.s3.amazonaws.com/autobahnjs/latest/autobahn.min.jgz"></script>
+<!--
+ <script type="text/javascript" src="./js/loader.js"></script>
+ <script src="./js/autobahn.min.jgz"></script>
+-->
 </head>
 
 
@@ -64,6 +69,21 @@ function getFunc(name){
 //contains options for every chart drawn
 var chartSpace = {};
 
+//One Time runners
+
+function O_barChart(received){
+	var d = received['__data__'];
+	var eid = received['__id__'];
+	console.log('oneTime called');
+	dataTable = new google.visualization.DataTable();
+	dataTable.addColumn('string',d[0])
+	dataTable.addColumn('number',d[1])
+	chartSpace[eid]['oneTime']['retVal'] = dataTable;
+	chartSpace[eid]['oneTime']['flag'] = true;
+	console.log(chartSpace);
+}
+
+
 function handleMetaData(args){
 	// this function will subscribe/unsubscribe to necessary topics
 	// args should be a json string
@@ -72,6 +92,12 @@ function handleMetaData(args){
 	// unsubscribe = '__all__' or ''
 	// title is a string. Must be given if subscribe topics are passes
 	//console.log(args);
+	function createTheElem(eid){
+		var child = document.createElement('div');
+		var parent = document.getElementById('container');
+		child.id = funcName+'-'+eid;
+		if(!document.getElementById(child.id)){ parent.appendChild(child); AllSubs.push(subs); }
+	}
 	args = args[0]
 	while(args.indexOf('\'') != -1){
 		args = args.replace('\'','\"');
@@ -100,48 +126,58 @@ function handleMetaData(args){
 		function(sub){ 
 		console.log("Subscribed to: ",sub['topic']); 
 		// add some chart space for options
-		//console.log('move')
 		var __id__ = subs.split('.')[3];
 		chartSpace[__id__] = { 'options': globalSpace[funcName]['options'] };
 		chartSpace[__id__]['options']['title'] = title;
+
+		// you can add yout custom code in chartSpace here.
+		// Example: registering oneTime runner
+		chartSpace[__id__]['oneTime'] = {};
+		chartSpace[__id__]['oneTime']['flag'] = false;
+		chartSpace[__id__]['oneTime']['run'] = O_barChart;
+		// done adding custom code
+
 		// make an element in html file
-		var child = document.createElement('div');
-		var parent = document.getElementById('container');
-		child.id = funcName+'-'+__id__;
-		if(!document.getElementById(child.id)){ parent.appendChild(child); AllSubs.push(subs); }
-		// store in AllSubs
-		//console.log(chartSpace);
-		//console.log(globalSpace);
-		//console.log(AllSubs);
+		createTheElem(__id__)
 		},
 		function(err){ console.log("Error Occurred: ",err); conn.close(); }
 		);
 	}
 }
 
-var d;
 var barChart = function(received){
 // all data must contain an '__id__' field i.e., data = {'__id__': 'any string', '__data__': data, '__add__': 'true or false'}
 // if __add__ is false then update data
 
 /* this code is only for testing */
+	//console.log('entered')
       received = JSON.parse(received[0]);
-      var data = google.visualization.arrayToDataTable([
-        ["Element", "Density", { role: "style" } ],
-        ["Copper", 8.94, "#b87333"],
-        ["Silver", 10.49, "silver"],
-        ["Gold", 19.30, "gold"],
-        ["Platinum", 21.45, "color: #e5e4e2"]
-      ]);
+      var d = received['__data__'];
+      var eid = received['__id__']
+      var AddFlag = received['__add__']
 
-      var view = new google.visualization.DataView(data);
-      view.setColumns([0, 1,
-                       { calc: "stringify",
-                         sourceColumn: 1,
-                         type: "string",
-                         role: "annotation" },
-                       2]);
 
+	//checking onetime runner
+	if(chartSpace[eid]['oneTime']['flag'] == false){
+		chartSpace[eid]['oneTime']['run'](received);
+		retVal = chartSpace[eid]['oneTime']['retVal'];
+		console.log(chartSpace[eid]['oneTime']['flag'] == false)
+	}
+	else{
+		retVal = chartSpace[eid]['oneTime']['retVal'];
+	}
+
+
+	//adding or updating data
+	if(AddFlag == true){
+		retVal.addRow(d);
+	}
+	else{
+	}
+
+	//options must be defined in variable 'globalSpace'
+	//usage: var options = globalSpace['barChart']['options']
+	//you can also add some extra options here. e.g options['width'] = 400
       var options = {
         title: "Density of Precious Metals, in g/cm^3",
         width: 600,
@@ -149,8 +185,10 @@ var barChart = function(received){
         bar: {groupWidth: "95%"},
         legend: { position: "none" },
       };
-      var chart = new google.visualization.ColumnChart(document.getElementById("barChart-"+received['__id__']));
-      chart.draw(view, options);
+
+	//code for drawing chart
+      var chart = new google.visualization.ColumnChart(document.getElementById("barChart-"+eid));
+      chart.draw(retVal, options);
 
 }
 
@@ -203,6 +241,7 @@ connection.onclose = function (reason, details) {
 }
 
 connection.open()
+//barChart({'__id__': 'any string', '__data__': data, '__add__': 'true or false'})
 }
 //done handling connection
 

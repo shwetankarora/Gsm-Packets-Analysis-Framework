@@ -59,13 +59,17 @@ class AppSession(ApplicationSession):
                     try:
                         delay = kwargs['delay']
                         for value in data:
-                            yield self.publishData(json.dumps({'__id__': kwargs['_id'], '__data__': value}), publish_uri)
+                            toSend = json.dumps({'__id__': kwargs['_id'], '__data__': value, '__add__': kwargs['add']})
+                            print(toSend)
+                            yield self.publishData(toSend, publish_uri)
                             yield sleep(delay)
                     except:
                         print("delay must be given if data packets are in block form.")
                 else:
                     try:
-                        yield self.publishData(json.dumps({'__id__': kwargs['_id'], '__data__': data}), publish_uri)
+                        toSend = json.dumps({'__id__': kwargs['_id'], '__data__': data, '__add__': kwargs['add']})
+                        print(toSend)
+                        yield self.publishData(toSend, publish_uri)
                     except Exception as e:
                         print(e)
             except:

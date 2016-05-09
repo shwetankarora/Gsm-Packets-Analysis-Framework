@@ -23,14 +23,21 @@ class CellData(ApplicationSession):
         # if function name == __all__ then unsubscribe to all
         yield self.publish('com.example.data', 'barChart', oneTime=True, _id=self._id, title=self.title)
         yield sleep(3)
-        yield self.publish('com.example.data', 'barChart', data='hello', block=0, delay=0.01, oneTime=False, _id=self._id)
-        '''
-        docs = yield getDataOfTowers(self.mongo)
+        # yield self.publish('com.example.data', 'barChart', data='hello', block=0, delay=0.01, oneTime=False, _id=self._id, add=True)
+
+        docs = [['Element', 'Density'],
+                ["Copper", 8.94],
+                ["Silver", 10.49],
+                ["Gold", 19.30],
+                ["Platinum", 21.45]]
+
+        # docs = yield getDataOfTowers(self.mongo)
+
         for doc in docs:
-            doc.pop('_id')
-            yield self.publish('com.example.data', 'barChart', data=doc, block=0, delay=0.01, oneTime=False, _id=self.id)
+            yield self.publish('com.example.data', 'barChart', data=doc, block=0, delay=0.01, oneTime=False, _id=self._id, add=True)
             yield sleep(0.01)
-        '''
+
+
 
     @inlineCallbacks
     def onConnect(self):
