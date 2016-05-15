@@ -1,0 +1,50 @@
+Anakytics:
+
+H: d7-d17:5-(40-50) -> intra_zone
+M: d7-d17:5-(25-30) -> intra_zone
+L: dX-dY :2-(10-15) -> intra_zone + person_to_person
+
+person: bited(0-2):infected=true
+	bited(5-16):symptoms=true
+	chance_of_death(after symptoms):0
+	recovery_period(20-30):recovered=true
+	probability of re-infection:(0-1):reinfection=false
+
+
+person_to_person:  day of arrival of infected person in uninfected zone
+		   % of chance of infecting uninfected person
+
+		   if person.infected==true 
+		   	person(person.work=this.home).infected =
+		   		if(random[person.chance])
+		   			true
+		   		else
+		   			false
+		   based on the assumption that a person cannot spread a disease to more than one person in a single day	
+		  
+		  
+intra_zone: % of infecting other person day wise(0.1*(% of infected population))
+
+// can be added later
+perimeter contraint: only infects persons within a specified range based on lat and lon of towers(say 6 towers around)
+
+#nw->sw, sw->nw, e->sw, s->c, n->sw, c->sw, sw->c, e->c, ne->n, w->sw
+#nw>s>sw>e>ne>w>n>c
+#in->sw(5),nw,c(2),n
+#out->nw,e(2),n,c,w, sw(2),s, ne
+#highzone = nw
+#mediumzone = ne,s
+#lowzone = sw,e,c,w,n
+
+
+console.log 'Simulation variables:'
+  console.log "Population: #{people.length}"
+  console.log "Population in nw: #{Math.floor 21.79*0.01*population}. Working population: "+nw
+  console.log "Population in ne: #{Math.floor 13.38*0.01*population}. Working population: "+ne
+  console.log "Population in w: #{Math.floor 15.2*0.01*population}. Working population: "+w
+  console.log "Population in c: #{Math.floor 3.45*0.01*population}. Working population: "+c
+  console.log "Population in e: #{Math.floor 10.19*0.01*population}. Working population: "+e
+  console.log "Population in sw: #{Math.floor 13.68*0.01*population}. Working population: "+sw
+  console.log "Population in s: #{Math.floor 16.32*0.01*population}. Working population: "+s
+  console.log "Population in n: #{Math.floor 5.27*0.01*population}. Working population: "+n
+
