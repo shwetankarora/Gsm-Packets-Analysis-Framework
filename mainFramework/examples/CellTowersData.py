@@ -2,14 +2,19 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 from txmongo.connection import ConnectionPool
 from autobahn.twisted.util import sleep
+from progressbar import ProgressBar
 import hashlib
 
 
+idToHome = {}
 @inlineCallbacks
-def getDataOfTowers(mongo):
+def getStoredPackets(mongo):
+    global idToHome
+
     db = mongo.GsmSimulatedData
-    col = db.CellTowers
-    docs = yield col.find()
+    col = db.ProcessedPackets
+
+    docs = yield col.find(spec={'day': {'$gte': 7}})
     returnValue(docs)
 
 
@@ -17,26 +22,80 @@ class CellData(ApplicationSession):
 
     @inlineCallbacks
     def onJoin(self, details):
-        # barChart is the function name
-        # _id is the topic id
-        # title is the title
-        # if function name == __all__ then unsubscribe to all
-        yield self.publish('com.example.data', 'barChart', oneTime=True, _id=self._id, title=self.title)
-        yield sleep(3)
-        # yield self.publish('com.example.data', 'barChart', data='hello', block=0, delay=0.01, oneTime=False, _id=self._id, add=True)
+        global idToHome
+        db = self.mongo.GsmSimulatedData
+        persons = {}
 
-        docs = [['Element', 'Density'],
-                ["Copper", 8.94],
-                ["Silver", 10.49],
-                ["Gold", 19.30],
-                ["Platinum", 21.45]]
+        idToHome = yield db.PeopleHomeZones.find()
 
-        # docs = yield getDataOfTowers(self.mongo)
+        for val in idToHome:
+            persons[val['id']] = {'zone': val['zone']}
 
-        for doc in docs:
-            yield self.publish('com.example.data', 'barChart', data=doc, block=0, delay=0.01, oneTime=False, _id=self._id, add=True)
-            yield sleep(0.01)
+        l = ['e', 'w', 'n', 's', 'ne', 'nw', 'sw', 'c']
+        totalDays = 120
+        db = self.mongo.TestingData
+        print('Loading Data...')
+        pbar = ProgressBar()
+        for pid in pbar(persons.keys()):
+            doc = yield db.PeopleLocationData.find(spec={'id': pid})
+            doc = doc[0]
+            doc['_id'] = 10
+            persons[pid] = {'zone': doc['zone'], 'loc': doc['loc']}
 
+        # print(persons)
+        print('Loaded')
+
+        infected = {}
+        recovered = {}
+        temp = {}
+
+        print('Start')
+        for ghj in l[1:2]:
+            for day in range(totalDays):
+                for z in l:
+                    n = z+'_'+str(day)+'_meta'
+                    col = db[n]
+                    docs = yield col.find()
+                    for doc in docs:
+                        doc['_id'] = 10
+                        try:
+                            pids = doc['infected']
+                        except:
+                            continue
+                        for pid in pids:
+                            try:
+                                infected[z]
+                            except:
+                                infected[z] = []
+                            try:
+                                infected[z].index(pid)
+                                try:
+                                    temp[z].remove(temp[temp.index(pid)])
+                                except:
+                                    pass
+                            except:
+                                print persons[pid]
+                                yield self.publish('com.example.geochart.yo', persons[pid], infected=True)
+                                yield sleep(0.1)
+                                infected[z].append(pid)
+                        try:
+                            temp[z]
+                        except:
+                            temp[z] = []
+                        for pid in temp[z]:
+                            try:
+                                recovered[z]
+                            except:
+                                recovered[z] = []
+                            try:
+                                recovered[z].index(pid)
+                            except:
+                                print(persons[pid])
+                                yield self.publish('com.example.geochart.yo', persons[pid], infected=False)
+                                yield sleep(0.1)
+                                recovered[z].append(pid)
+
+                        temp = infected.copy()
 
 
     @inlineCallbacks

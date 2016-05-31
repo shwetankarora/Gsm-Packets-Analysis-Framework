@@ -21,6 +21,9 @@
 .icon-dc {
   background: #D65757;
 }
+.icon-db{
+  background: #ffff99;
+}
 </style>
 <div id="mapid"></div>
 
@@ -50,26 +53,43 @@ var mapboxTiles = L.tileLayer('https://api.mapbox.com/v4/aniruddh.010ee35f/{z}/{
 
 var map = L.map('mapid')
     .addLayer(mapboxTiles)
-    .setView([28.6885, 77.0203], 11);
+    .setView([28.6139, 77.1], 11);
 
 var cssIcon = L.divIcon({
   className: 'my-icon icon-dc',
   iconSize: null
 });
+
+var cssIcon2 = L.divIcon({
+  className: 'my-icon icon-db',
+  iconSize: null
+})
 // fired when connection is established and session attached
 //
+var a;
 connection.onopen = function (session, details) {
 
    console.log("Connected");
 
    // SUBSCRIBE to a topic and receive events
    //
-   function on_counter (args) {
-      var counter = args[0];
-      counter = counter.split(',');
-      lat = parseFloat(counter[10].split(": ")[1]);
-      lon = parseFloat(counter[2].split(": ")[1]);
-	L.marker([lat,lon], {icon: cssIcon}).addTo(map);
+   function on_counter (args, infected) {
+      var counter = JSON.parse(JSON.stringify(args[0]));
+	try{
+		//console.log(counter['loc'][0],counter['loc'][1])		
+		lat = counter['loc'][0];
+		lon = counter['loc'][1];
+		if(infected['infected'] == true){
+		L.marker([lat,lon], {icon: cssIcon}).addTo(map);
+		}
+		else{
+		//console.log(lat,lon)
+		L.marker([lat,lon], {icon: cssIcon2}).addTo(map);
+		}
+	}
+	catch(e){
+		console.log(e)
+	}
    }
    session.subscribe('com.example.geochart.yo', on_counter).then(
       function (sub) {

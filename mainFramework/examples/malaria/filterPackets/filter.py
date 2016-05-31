@@ -4,7 +4,9 @@ from txmongo.connection import ConnectionPool
 from autobahn.twisted.util import sleep
 import random
 import math
+import sys
 from pymongo import MongoClient
+from progressbar import ProgressBar
 
 url = "mongodb://localhost:27017"
 cursor = None
@@ -113,24 +115,18 @@ def decision(prob):
 def storePackets(p):
     global packets
     packets += p
-    print('\033[91m', len(packets), '\033[0m')
+    #print('\033[91m', len(packets), '\033[0m')
 
 
 @defer.inlineCallbacks
 def waitForCompletePackets(day):
     global packets
-    prev_l = -1
-    # checks when to start clearing the packets
-
-    # wait for packets to get filled
-    while not len(packets):
-        yield sleep(5)
-
-    # actual check code
-    while packets[-1]['day'] == day and len(packets) > prev_l:
-        prev_l = len(packets)
-        yield sleep(6)
-        print('\033[93m Waiting for packets.... \033[0m')
+    while not len(packets) or packets[-1]['day'] == day:
+        yield sleep(1)
+        # print('length->',len(packets))
+        # print('lastday->',packets[-1]['day'],day)
+        #print('\033[93m Waiting for packets.... \033[0m')
+    # print('Done Waiting')
     defer.returnValue(True)
 
 
@@ -146,9 +142,9 @@ def clearPackets(day):
 @defer.inlineCallbacks
 def getPacketsOfDay(day, clear=False):
     global packets
-    print('Executing wait code')
+    # print('Executing wait code')
     yield waitForCompletePackets(day)
-    print('Done Waiting')
+    # print('Done Waiting')
 
     # use binary search to find the packets of the day
     # print(len(packets))
@@ -166,14 +162,16 @@ def getPacketsOfDay(day, clear=False):
             first = mid
             mid = (last+first)/2
 
-    print('\033[92mCheckpoint 1 reached\033[0m')
+    # print('\033[92mCheckpoint 1 reached '+ str(day))
+    # print(mid,len(packets),packets[0]['day'],packets[-1]['day'])
+    # print('\033[0m')
     # expanding mid to find the two indexes
     f_index = mid
     l_index = mid
 
     while True:
         try:
-            if packets[f_index]['day'] == day:
+            if packets[f_index]['day'] == day and f_index >= 0:
                 f_index -= 1
             else:
                 f_index += 1
@@ -193,15 +191,15 @@ def getPacketsOfDay(day, clear=False):
             l_index -= 1
             break
 
-    print('\033[92mcheckpoint2 reached\033[0m')
+    # print('\033[92mcheckpoint2 reached\033[0m')
     # print(f_index, l_index)
 
     retPackets = packets[f_index:l_index+1]
 
     if clear:
         packets = packets[0:f_index] + packets[l_index+1:len(packets)]
-        print("\033[92mPackets Cleared\033[0m")
-
+        # print("\033[92mPackets Cleared\033[0m")
+    # print('returning.....')
     defer.returnValue((f_index, l_index, retPackets))
 
 
@@ -213,11 +211,12 @@ def BlockingInsert(p):
 
 id_to_homezone = {}
 
-
+popu = int(sys.argv[1])
 @defer.inlineCallbacks
 def getHomeStates():
     # this will return pid->homezone
-    population = 2000
+    global popu
+    population = popu
     retVal = {}
     db = cursor.GsmSimulatedData
     col = db.RawPackets
@@ -260,7 +259,8 @@ def getHomeStates():
 @defer.inlineCallbacks
 def getPopulationZoneWise():
     # pop = {'<type 'str'>': <type 'int'>}
-    population = 2000
+    global popu
+    population = popu
     pop = {'nw': int(21.79*0.01*population),
            'ne': int(13.38*0.01*population),
            'w': int(15.2*0.01*population),
@@ -385,10 +385,11 @@ def spreadingE(pop, epidemic):
     # w_i_chart = working_infected.copy()
     # nw_i_chart = non_working_infected.copy()
     coi_working = random.random()
-
+    pbar = ProgressBar()
     print('Entered in For loop')
-    for i in range(epidemic.incubation, epidemic.totalDays):
+    for i in pbar(range(epidemic.incubation, epidemic.totalDays)):
         p = yield getPacketsOfDay(i, clear=True)
+        # print('left Days->',epidemic.totalDays-i)
         temp = {}
         # print('\033[93m', len(p[2]), '\033[0m')
         # print('\033[93m', p[2][0], '\033[0m')
@@ -516,7 +517,7 @@ def initiatingE():
     # original logic of filtering goes here
     # db = cursor.GsmSimulatedData
     # col = db.ProcessedPackets
-    epidemic = Epidemic(totalDays=48)
+    epidemic = Epidemic(totalDays=120)
 
     # wait till the incubation period
     for i in range(epidemic.incubation):
@@ -546,6 +547,7 @@ def startFilter():
     for i in xrange(0, totalPackets-remaining+1, skip):
         yield getRawPackets(i, limit).addCallback(storePackets)
     yield getRawPackets(totalPackets-remaining, remaining).addCallback(storePackets)
+    print('packets Full')
 
 
 def printPackets(p):
