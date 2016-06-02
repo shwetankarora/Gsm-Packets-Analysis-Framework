@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load("current", {packages:["corechart"]});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var data = google.visualization.arrayToDataTable([
+        ['Month', 'South West', 'South', 'North East', 'North West', 'North',
+         'East', 'West', 'Central', { role: 'annotation' } ],
+        ['June', 920, 290, 316, 710, 352, 0, 0, 197, ''],
+        ['July', 120, 250, 119, 610, 209, 0, 0, 94, ''],
+        ['August', 121, 101, 131, 359, 129, 0, 0, 94, ''],
+        ['September', 19, 14, 50, 300, 89, 0, 0, 2, '']
+      ]);
+
+      var options = {
+        width: 600,
+        height: 400,
+        legend: { position: 'top', maxLines: 3 },
+        bar: { groupWidth: '75%' },
+        isStacked: true
+      };
+
+      var chart = new google.visualization.BarChart(document.getElementById("barchart_values"));
+      chart.draw(data, options);
+  }
+  </script>
+  </head>
+<body>
+<div id="barchart_values" style="width: 900px; height: 300px;"></div>
+</body>
+</html>

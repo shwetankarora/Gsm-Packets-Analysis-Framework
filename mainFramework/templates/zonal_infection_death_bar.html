@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load("current", {packages:["corechart"]});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      var data = google.visualization.arrayToDataTable([
+        ["Zone", "Percentage", { role: "style" } ],
+        ["South West", 916, "#b87333"],
+        ["South", 724, "silver"],
+        ["North West", 1559, "gold"],
+        ["North East", 616, "color: #e5e4e2"],
+        ["East", 0, "color: #e5e4e2"],
+        ["North", 359, "color: #e5e4e2"],
+        ["West", 0, "color: #e5e4e2"],
+        ["Central", 220, "color: #e5e4e2"]
+      ]);
+
+      var view = new google.visualization.DataView(data);
+      view.setColumns([0, 1,
+                       { calc: "stringify",
+                         sourceColumn: 1,
+                         type: "string",
+                         role: "annotation" },
+                       2]);
+
+      var options = {
+        title: "zone wise death toll at the end of month",
+        width: 600,
+        height: 400,
+        bar: {groupWidth: "95%"},
+        legend: { position: "none" },
+      };
+      var chart = new google.visualization.BarChart(document.getElementById("barchart_values"));
+      chart.draw(view, options);
+  }
+  </script>
+  </head>
+<body>
+<div id="barchart_values" style="width: 900px; height: 300px;"></div>
+</body>
+</html>
